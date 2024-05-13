@@ -1,0 +1,1 @@
+export const apolloRed = "#D71722"

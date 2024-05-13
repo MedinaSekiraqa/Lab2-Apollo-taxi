@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String            @unique @default(uuid())
+  name            String
+  lastName        String
+  phone           String
+  email           String            @unique
+  username        String            @unique
+  password        String
+  address         String
+  userInfo        String?
+  salary          Float
+  role            Role              @default(PRIMAR)
+  orari           Orari             @default(PLOTE)
+  permissions     Permission[]      @default([REPORTS])
+  notifications   Notification[]    @default([ROLE, SCHEDULE])
+  isActive        Boolean           @default(true)
+  token           Token?
+  shpenzimet      Shpenzimet[]
+  vetura          Vetura?           @relation(fields: [veturaId], references: [id])
+  veturaId        String?
+  raportiShoferit RaportiShoferit[]
+  Activity        Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Token {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId])
+  @@index([userId])
+  @@index([token])
+}
+
+model KategoriaEShpenzimeve {
+  id         String       @id @default(uuid())
+  emri       String
+  pershkrimi String?
+  shpenzimet Shpenzimet[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([emri])
+}
+
+model Shpenzimet {
+  id          String                @id @default(uuid())
+  kategoriaId String
+  kategoria   KategoriaEShpenzimeve @relation(fields: [kategoriaId], references: [id], onDelete: NoAction)
+  vlera       Decimal
+  pershkrimi  String?
+  data        DateTime
+  imagePath   String?
+  userId      String
+  user        User                  @relation(fields: [userId], references: [id], onDelete: SetDefault)
+
+  vetura            Vetura?          @relation(fields: [veturaId], references: [id])
+  veturaId          String?
+  raportiShoferit   RaportiShoferit? @relation(fields: [raportiShoferitId], references: [id])
+  raportiShoferitId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([kategoriaId])
+  @@index([userId])
+  @@index([veturaId])
+}
+
+model Vetura {
+  id           String  @id @default(uuid())
+  name         String
+  kilometrazha String?
+
+  user            User[]
+  shpenzimet      Shpenzimet[]
+  RaportiShoferit RaportiShoferit[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([name])
+}
+
+model RaportiShoferit {
+  id         String       @id @default(uuid())
+  pranoi     Decimal
+  dorzoi     Decimal
+  paushall   Decimal
+  minus      Decimal?
+  pershkrimi String?
+  shpenzimet Shpenzimet[]
+  vetura     Vetura       @relation(fields: [veturaId], references: [id])
+  user       User         @relation(fields: [userId], references: [id])
+  data       DateTime
+  userId     String
+  startTime  String
+  endTime    String
+  veturaId   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([veturaId])
+}
+
+model Activity {
+  id                      String  @id @default(uuid())
+  veprimi                 Veprimi
+  dokumenti               String
+  userId                  String
+  user                    User    @relation(fields: [userId], references: [id])
+  shpenzimetId            String?
+  kategoriaEShpenzimeveId String?
+  veturaId                String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([veturaId])
+}
+
+enum Notification {
+  SALARY
+  ROLE
+  SCHEDULE
+}
+
+enum Permission {
+  FINANCE
+  ADDUSER
+  REPORTS
+  WORKERS
+}
+
+enum Role {
+  ADMIN
+  PRIMAR
+  SEKONDAR
+  PADEKLARUAR
+}
+
+enum Orari {
+  PLOTE
+  GJYS
+}
+
+enum Veprimi {
+  CREATE
+  UPDATE
+  DELETE
+  GET
+  LOGIN
+}
